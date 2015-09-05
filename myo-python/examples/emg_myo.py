@@ -51,17 +51,12 @@ class Listener(libmyo.DeviceListener):
         self.last_time = ctime
 
         parts = []
-        if self.orientation:
-            for comp in self.orientation:
-                parts.append(str(comp).ljust(15))
-        parts.append(str(self.pose).ljust(10))
-        parts.append('E' if self.emg_enabled else ' ')
-        parts.append('L' if self.locked else ' ')
-        parts.append(self.rssi or 'NORSSI')
+#        parts.append(self.rssi or 'NORSSI')
         if self.emg:
             for comp in self.emg:
-                parts.append(str(comp).ljust(5))
-        print('\r' + ''.join('[{0}]'.format(p) for p in parts), end='')
+                parts.append(str(comp))
+#        print('\r' + ''.join('[{0}]'.format(p) for p in parts), end='\n')
+        print(','.join(p for p in parts), end='\n')
         sys.stdout.flush()
 
     def on_connect(self, myo, timestamp, firmware_version):
@@ -69,31 +64,12 @@ class Listener(libmyo.DeviceListener):
         myo.vibrate('short')
         myo.request_rssi()
         myo.request_battery_level()
+        myo.set_stream_emg(libmyo.StreamEmg.enabled)
+        self.emg_enabled = True
 
     def on_rssi(self, myo, timestamp, rssi):
         self.rssi = rssi
         self.output()
-
-    def on_pose(self, myo, timestamp, pose):
-        if pose == libmyo.Pose.double_tap:
-            myo.set_stream_emg(libmyo.StreamEmg.enabled)
-            self.emg_enabled = True
-        elif pose == libmyo.Pose.fingers_spread:
-            myo.set_stream_emg(libmyo.StreamEmg.disabled)
-            self.emg_enabled = False
-            self.emg = None
-        self.pose = pose
-        self.output()
-
-    def on_orientation_data(self, myo, timestamp, orientation):
-        self.orientation = orientation
-        self.output()
-
-    def on_accelerometor_data(self, myo, timestamp, acceleration):
-        pass
-
-    def on_gyroscope_data(self, myo, timestamp, gyroscope):
-        pass
 
     def on_emg_data(self, myo, timestamp, emg):
         self.emg = emg
@@ -157,9 +133,9 @@ class Listener(libmyo.DeviceListener):
 
 
 def main():
-    print("Connecting to Myo ... Use CTRL^C to exit.")
-    print("If nothing happens, make sure the Bluetooth adapter is plugged in,")
-    print("Myo Connect is running and your Myo is put on.")
+    #print("Connecting to Myo ... Use CTRL^C to exit.")
+    #print("If nothing happens, make sure the Bluetooth adapter is plugged in,")
+    #print("Myo Connect is running and your Myo is put on.")
     hub = libmyo.Hub()
     hub.set_locking_policy(libmyo.LockingPolicy.none)
     hub.run(1000, Listener())
