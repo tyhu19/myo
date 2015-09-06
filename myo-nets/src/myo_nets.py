@@ -4,11 +4,17 @@ import numpy as np
 import pandas as pd
 from pandas.io.parsers import read_csv
 from sklearn.utils import shuffle
+import lasagne
+import theano.tensor as T
+# from lasagne import layers
+# from lasagne.updates import nesterov_momentum
+# from nolearn.lasagne import NeuralNet
 
 FTRAIN = ['~/Programs/myo/myo-nets/data/emg_data_rest.csv',
           '~/Programs/myo/myo-nets/data/emg_data_finger3.csv']
 
 ns = 40
+
 
 def load(fname, isTrain):
     df = read_csv(os.path.expanduser(fname))  # load pandas dataframe
@@ -37,5 +43,36 @@ for filename in FTRAIN:
         X = Xe
         y = ye
     else:
-        X = np.concatenate((X, Xe))
-        y = np.concatenate((y, ye))
+        X = np.vstack((X, Xe))
+        y = np.vstack((y, ye))
+
+l_in = lasagne.layers.InputLayer(X.shape)
+l_hid1 = lasagne.layers.DenseLayer(l_in, num_units=100,
+                                   nonlinearity=lasagne.nonlinearities.rectify,
+                                   W=lasagne.init.GlorotUniform())
+l_out = lasagne.layers.DenseLayer(l_hid1, num_units=2,
+                                  nonlinearity=T.nmet.softmax)
+
+# net1 = NeuralNet(
+#     layers=[  # three layers: one hidden layer
+#         ('input', layers.InputLayer),
+#         ('hidden', layers.DenseLayer),
+#         ('output', layers.DenseLayer),
+#         ],
+#     # layer parameters:
+#     input_shape=(None, 1, X.shape[0], X.shape[1]),
+#     hidden_num_units=100,  # number of units in hidden layer
+#     output_nonlinearity=lasagne.nonlinearities.softmax,
+#     output_num_units=len(y),
+#
+#     # optimization method:
+#     update=nesterov_momentum,
+#     update_learning_rate=0.01,
+#     update_momentum=0.9,
+#
+#     regression=False,  # flag to indicate we're dealing with regression
+#     max_epochs=400,  # we want to train this many epochs
+#     verbose=1,
+#     )
+#
+# net1.fit(X, y)
